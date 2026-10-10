@@ -15,6 +15,7 @@ import pytest
 SELENIUM = ("selenium", "webdriver_manager")
 ADAPTERS = {"flet": "flet", "nicegui": "nicegui", "tkinter": "customtkinter"}
 HEAVY = (*SELENIUM, *ADAPTERS.values())
+TIMEOUT = 60
 
 # Rejecting every lazy import makes the process behave as if `lazy` were absent.
 FORCE_EAGER = "import sys\nsys.set_lazy_imports_filter(lambda *_: False)\n"
@@ -23,8 +24,9 @@ HELP = """\
 from page_refresher.main import app
 try:
     app({args!r}, prog_name="page-refresher")
-except SystemExit:
-    pass
+except SystemExit as exc:
+    if exc.code:
+        raise
 """
 
 
@@ -38,8 +40,13 @@ def loaded_heavy_modules(code: str) -> list[str]:
     report = f"print(json.dumps([m for m in {HEAVY!r} if m in sys.modules]))"
     probe = f"{code}\nimport json, sys\n{report}\n"
     result = subprocess.run(
-        [sys.executable, "-c", probe], capture_output=True, text=True, check=True
+        [sys.executable, "-c", probe],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=TIMEOUT,
     )
+    assert result.returncode == 0, result.stderr
     return json.loads(result.stdout.splitlines()[-1])
 
 
@@ -63,9 +70,7 @@ def test_loading_an_adapter_loads_only_its_toolkit(adapter: str) -> None:
         "from page_refresher.main import Adapter, _load_adapter\n"
         f"_load_adapter(Adapter({adapter!r}))\n"
     )
-    loaded = set(loaded_heavy_modules(code))
-    assert ADAPTERS[adapter] in loaded
-    assert loaded.isdisjoint(set(ADAPTERS.values()) - {ADAPTERS[adapter]})
+    assert loaded_heavy_modules(code) == [ADAPTERS[adapter]]
 
 
 @pytest.mark.skipif(

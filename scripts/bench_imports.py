@@ -18,6 +18,7 @@ import time
 
 FORCE_EAGER = "import sys\nsys.set_lazy_imports_filter(lambda *_: False)\n"
 MODES = {"lazy": "", "eager": FORCE_EAGER}
+TIMEOUT = 120
 
 HELP = """\
 import sys
@@ -31,15 +32,21 @@ def run(code: str, *flags: str) -> subprocess.CompletedProcess[str]:
     """
     Run `code` in a fresh interpreter with extra interpreter `flags`.
 
+    Exits with the child's stderr if it fails, so its traceback stays visible.
+
     Returns:
         The finished process, with its output captured.
     """
-    return subprocess.run(
+    proc = subprocess.run(
         [sys.executable, *flags, "-c", code],
         capture_output=True,
         text=True,
         check=False,
+        timeout=TIMEOUT,
     )
+    if proc.returncode != 0:
+        sys.exit(proc.stderr)
+    return proc
 
 
 def module_count(prelude: str) -> int:
