@@ -38,3 +38,22 @@ uv run page-refresher refresh --url https://example.com --delay 5 --refresh-coun
 uv sync --extra tkinter              # or: flet, nicegui, all
 uv run page-refresher run tkinter    # or: flet, nicegui
 ```
+
+## Startup performance
+
+A lazy import that turns eager doesn't break anything; the CLI just gets slower. `tests/test_lazy_imports.py` catches that by checking that importing the CLI or running `--help` loads none of Selenium, `webdriver-manager` or the GUI toolkits, and that `run <adapter>` loads only that adapter's toolkit.
+
+```bash
+uv run pytest
+```
+
+To measure the savings, `scripts/bench_imports.py` runs the CLI twice, once as is and once with every lazy import forced eager (`sys.set_lazy_imports_filter`):
+
+```console
+$ uv run python scripts/bench_imports.py
+mode    modules  import (ms)  --help (ms)
+lazy        158         17.4           79
+eager      1206        303.4          395
+```
+
+For a per-module breakdown, run `uv run python -X importtime -c "import page_refresher.main"`.

@@ -27,7 +27,7 @@ page-refresher = "page_refresher.main:app"
 
 
 [dependency-groups]
-dev = ["page-refresher[all]", "ruff>=0.15.10"]
+dev = ["page-refresher[all]", "pytest>=9.1.1", "ruff>=0.15.10"]
 
 
 [build-system]
@@ -85,7 +85,8 @@ convention = "pep257"
 
 
 [tool.ruff.lint.per-file-ignores]
-"./tests/*.py" = ["S101", "PLR2004"]
+"./scripts/*.py" = ["INP001", "S404", "S603", "T201"]
+"./tests/*.py" = ["D103", "INP001", "PLR2004", "S101", "S404", "S603"]
 
 
 [tool.ruff.lint.pyupgrade]
