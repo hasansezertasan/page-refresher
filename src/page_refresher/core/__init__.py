@@ -1,0 +1,1 @@
+from page_refresher.core.refresher import SeleniumRefresher as SeleniumRefresher
