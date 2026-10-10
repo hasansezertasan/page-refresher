@@ -33,5 +33,8 @@ Requires Python 3.15+.
 ```bash
 uv sync
 uv run page-refresher refresh --url https://example.com --delay 5 --refresh-count 10
-uv run page-refresher run tkinter   # or: flet, nicegui
+
+# Each GUI is an optional extra; install the one you want to run.
+uv sync --extra tkinter              # or: flet, nicegui, all
+uv run page-refresher run tkinter    # or: flet, nicegui
 ```

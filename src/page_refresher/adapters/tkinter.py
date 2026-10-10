@@ -1,9 +1,6 @@
 import threading
 
 import customtkinter as ctk
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 from page_refresher.core.refresher import SeleniumRefresher
 
@@ -17,7 +14,6 @@ class Main(ctk.CTk):
         self.resizable(width=False, height=False)
 
         self.refresher: SeleniumRefresher | None = None
-        self.driver: webdriver.Chrome | None = None
         self.thread: threading.Thread | None = None
 
         self.interface()
@@ -66,18 +62,24 @@ class Main(ctk.CTk):
         delay = int(self.delay_input.get())
         refresh_count = int(self.view_count_input.get())
 
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-        self.refresher = SeleniumRefresher(self.driver, url, delay, refresh_count)
+        if self.refresher is not None:
+            self.refresher.stop()
+        self.refresher = SeleniumRefresher(url, delay, refresh_count)
         self.status_label.configure(text="Running...")
 
-        self.thread = threading.Thread(target=self._run_refresh, daemon=True)
+        self.thread = threading.Thread(
+            target=self._run_refresh, args=(self.refresher,), daemon=True
+        )
         self.thread.start()
 
-    def _run_refresh(self) -> None:
-        if self.refresher is None:
-            return
-        self.refresher.refresh()
-        self.after(0, lambda: self.status_label.configure(text="Done."))
+    def _run_refresh(self, run: SeleniumRefresher) -> None:
+        # Runs on a worker thread, so Chrome startup doesn't freeze the window.
+        run.refresh()
+        self.after(0, self._on_finished, run)
+
+    def _on_finished(self, run: SeleniumRefresher) -> None:
+        if run is self.refresher and not run.stopped:
+            self.status_label.configure(text="Done.")
 
     def stop(self) -> None:
         if self.refresher is not None:
@@ -87,8 +89,6 @@ class Main(ctk.CTk):
     def on_closing(self) -> None:
         if self.refresher is not None:
             self.refresher.stop()
-        if self.driver is not None:
-            self.driver.quit()
         self.destroy()
 
 

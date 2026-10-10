@@ -1,47 +1,42 @@
 from nicegui import run, ui
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 from page_refresher.core.refresher import SeleniumRefresher
 
-refresher: SeleniumRefresher | None = None
-driver: webdriver.Chrome | None = None
 
+def root() -> None:
+    """Build the page; NiceGUI calls this once per client, so state stays per client."""
+    refresher: SeleniumRefresher | None = None
 
-def _do_refresh(r: SeleniumRefresher) -> None:
-    r.refresh()
+    async def start_click() -> None:
+        nonlocal refresher
+        if refresher is not None:
+            refresher.stop()
+        refresher = current = SeleniumRefresher(
+            url_input.value or "",
+            int(delay_input.value or 5),
+            int(count_input.value or 1),
+        )
+        status.set_text("Running...")
+        # Chrome startup and the refresh loop both run off the event loop.
+        await run.io_bound(current.refresh)
+        if current is refresher and not current.stopped:
+            status.set_text("Done.")
 
+    def stop_click() -> None:
+        if refresher is not None:
+            refresher.stop()
+        status.set_text("Stopped.")
 
-async def start_click() -> None:
-    global driver, refresher  # noqa: PLW0603
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-    refresher = SeleniumRefresher(
-        driver,
-        url_input.value or "",
-        int(delay_input.value or 5),
-        int(count_input.value or 1),
-    )
-    status.set_text("Running...")
-    await run.io_bound(_do_refresh, refresher)
-    status.set_text("Done.")
-
-
-def stop_click() -> None:
-    if refresher is not None:
-        refresher.stop()
-    status.set_text("Stopped.")
-
-
-url_input = ui.input("Target URL").classes("w-full")
-with ui.row():
-    delay_input = ui.number("Refresh Delay (seconds)", value=5)
-    count_input = ui.number("Refresh Count", value=1)
-with ui.row():
-    ui.button("Start", on_click=start_click)
-    ui.button("Stop", on_click=stop_click)
-status = ui.label("")
+    url_input = ui.input("Target URL").classes("w-full")
+    with ui.row():
+        delay_input = ui.number("Refresh Delay (seconds)", value=5)
+        count_input = ui.number("Refresh Count", value=1)
+    with ui.row():
+        ui.button("Start", on_click=start_click)
+        ui.button("Stop", on_click=stop_click)
+    status = ui.label("")
 
 
 def main() -> None:
-    ui.run(title="Page Refresher")
+    # No auto-reload: it re-runs the CLI entry script, which never calls ui.run().
+    ui.run(root, title="Page Refresher", reload=False)

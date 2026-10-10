@@ -6,9 +6,7 @@ lazy from collections.abc import Callable
 
 import typer
 
-# Lazy: Selenium and the driver manager are heavy, and only some commands need them.
-lazy from selenium import webdriver
-lazy from selenium.webdriver.chrome.service import Service
+# Lazy: the driver manager is heavy, and only some commands need it.
 lazy from webdriver_manager.chrome import ChromeDriverManager
 
 from page_refresher import SeleniumRefresher
@@ -78,9 +76,7 @@ def refresh(
         page-refresher refresh
         page-refresher refresh --url https://example.com --delay 5 --refresh-count 10
     """
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-    refresher = SeleniumRefresher(driver, url, delay, refresh_count)
-    refresher.refresh()
+    SeleniumRefresher(url, delay, refresh_count).refresh()
 
 
 def _load_adapter(adapter: Adapter) -> Callable[[], None]:

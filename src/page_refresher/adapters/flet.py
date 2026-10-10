@@ -1,9 +1,4 @@
-import threading
-
 import flet as ft
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 from page_refresher.core.refresher import SeleniumRefresher
 
@@ -15,36 +10,33 @@ def main() -> None:
         page.window.height = 400
 
         refresher: SeleniumRefresher | None = None
-        driver: webdriver.Chrome | None = None
 
         url_field = ft.TextField(label="Target URL", expand=True)
         delay_field = ft.TextField(label="Refresh Delay (seconds)", width=200)
         count_field = ft.TextField(label="Refresh Count", width=200)
         status = ft.Text(value="", color=ft.Colors.GREY)
 
-        def run_refresh() -> None:
-            nonlocal refresher
-            if refresher is None:
-                return
-            refresher.refresh()
-            status.value = "Done."
-            page.update()
+        def run_refresh(run: SeleniumRefresher) -> None:
+            # Runs on a worker thread, so Chrome startup doesn't block the page.
+            run.refresh()
+            if run is refresher and not run.stopped:
+                status.value = "Done."
+                page.update()
 
         def start_click(e: ft.ControlEvent) -> None:
-            nonlocal driver, refresher
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+            nonlocal refresher
+            if refresher is not None:
+                refresher.stop()
             refresher = SeleniumRefresher(
-                driver,
                 url_field.value or "",
                 int(delay_field.value or "5"),
                 int(count_field.value or "1"),
             )
             status.value = "Running..."
             page.update()
-            threading.Thread(target=run_refresh, daemon=True).start()
+            page.run_thread(run_refresh, refresher)
 
         def stop_click(e: ft.ControlEvent) -> None:
-            nonlocal refresher
             if refresher is not None:
                 refresher.stop()
             status.value = "Stopped."
@@ -54,10 +46,10 @@ def main() -> None:
             url_field,
             ft.Row([delay_field, count_field]),
             ft.Row([
-                ft.ElevatedButton("Start", on_click=start_click),
-                ft.ElevatedButton("Stop", on_click=stop_click),
+                ft.Button("Start", on_click=start_click),
+                ft.Button("Stop", on_click=stop_click),
             ]),
             status,
         )
 
-    ft.app(target=app)
+    ft.run(app)
