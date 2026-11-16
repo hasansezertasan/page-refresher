@@ -1,3 +1,5 @@
+"""Selenium-driven page refresher shared by the CLI and every GUI."""
+
 import threading
 lazy from collections.abc import Callable
 
@@ -17,6 +19,8 @@ def chrome_driver() -> webdriver.Chrome:
 
 
 class SeleniumRefresher:
+    """Open a URL in Chrome and refresh it a set number of times."""
+
     def __init__(
         self,
         url: str,
@@ -24,6 +28,7 @@ class SeleniumRefresher:
         refresh_count: int,
         driver_factory: Callable[[], webdriver.Chrome] = chrome_driver,
     ) -> None:
+        """Store the settings; Chrome does not start until `refresh()`."""
         self.url = url
         """URL to refresh"""
         self.delay = delay
@@ -55,4 +60,5 @@ class SeleniumRefresher:
             driver.quit()
 
     def stop(self) -> None:
+        """Ask `refresh()` to stop at its next wait."""
         self._stopped.set()

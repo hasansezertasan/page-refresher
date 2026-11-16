@@ -1,3 +1,5 @@
+"""NiceGUI GUI, served in a native window."""
+
 from nicegui import run, ui
 
 from page_refresher.core.refresher import SeleniumRefresher
@@ -38,5 +40,6 @@ def root() -> None:
 
 
 def main() -> None:
+    """Start the NiceGUI app."""
     # No auto-reload: it re-runs the CLI entry script, which never calls ui.run().
     ui.run(root, title="Page Refresher", reload=False)

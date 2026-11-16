@@ -58,7 +58,7 @@ skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
 fixable = ["ALL"]
-ignore = ["COM812", "CPY", "FIX", "TD"]
+ignore = ["missing-trailing-comma", "CPY", "FIX", "TD"]
 preview = true
 select = ["ALL"]
 
@@ -85,8 +85,22 @@ convention = "pep257"
 
 
 [tool.ruff.lint.per-file-ignores]
-"./scripts/*.py" = ["INP001", "S404", "S603", "T201"]
-"./tests/*.py" = ["D103", "INP001", "PLR2004", "S101", "S404", "S603"]
+# GUI builders nest their event handlers, which pushes complexity past the limit.
+"./src/page_refresher/adapters/*.py" = ["complex-structure"]
+"./scripts/*.py" = [
+  "implicit-namespace-package",
+  "print",
+  "subprocess-without-shell-equals-true",
+  "suspicious-subprocess-import",
+]
+"./tests/*.py" = [
+  "assert",
+  "implicit-namespace-package",
+  "magic-value-comparison",
+  "subprocess-without-shell-equals-true",
+  "suspicious-subprocess-import",
+  "undocumented-public-function",
+]
 
 
 [tool.ruff.lint.pyupgrade]
