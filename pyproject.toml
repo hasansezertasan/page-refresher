@@ -27,7 +27,7 @@ page-refresher = "page_refresher.main:app"
 
 
 [dependency-groups]
-dev = ["page-refresher[all]", "pytest>=9.1.1", "ruff>=0.15.10"]
+dev = ["page-refresher[all]", "pytest>=9.1.1", "ruff>=0.17.0"]
 
 
 [build-system]
