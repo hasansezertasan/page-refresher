@@ -1,9 +1,13 @@
+"""Flet GUI."""
+
 import flet as ft
 
 from page_refresher.core.refresher import SeleniumRefresher
 
 
 def main() -> None:
+    """Open the Flet window."""
+
     def app(page: ft.Page) -> None:
         page.title = "Page Refresher"
         page.window.width = 600
@@ -23,7 +27,7 @@ def main() -> None:
                 status.value = "Done."
                 page.update()
 
-        def start_click(e: ft.ControlEvent) -> None:
+        def start_click(_e: ft.ControlEvent) -> None:
             nonlocal refresher
             if refresher is not None:
                 refresher.stop()
@@ -36,7 +40,7 @@ def main() -> None:
             page.update()
             page.run_thread(run_refresh, refresher)
 
-        def stop_click(e: ft.ControlEvent) -> None:
+        def stop_click(_e: ft.ControlEvent) -> None:
             if refresher is not None:
                 refresher.stop()
             status.value = "Stopped."

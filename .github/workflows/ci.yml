@@ -27,6 +27,9 @@ jobs:
       # Python comes from .python-version; --locked fails if uv.lock is stale.
       - run: uv sync --locked
 
+      # pyproject sets fix = true; --no-fix makes violations fail instead of being fixed on the runner.
+      - run: uv run ruff check --no-fix --output-format=github .
+
       - run: uv run ruff format --check .
 
       - run: uv run pytest

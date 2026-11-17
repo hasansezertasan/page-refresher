@@ -1,3 +1,5 @@
+"""CustomTkinter GUI."""
+
 import threading
 
 import customtkinter as ctk
@@ -6,7 +8,10 @@ from page_refresher.core.refresher import SeleniumRefresher
 
 
 class Main(ctk.CTk):
-    def __init__(self, *args, **kwargs) -> None:
+    """Main window."""
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        """Set up the window and build its widgets."""
         super().__init__(*args, **kwargs)
         self.title("Page Refresher")
         self.geometry("600x300")
@@ -19,6 +24,7 @@ class Main(ctk.CTk):
         self.interface()
 
     def interface(self) -> None:
+        """Lay out the labels, inputs, buttons and status line."""
         self.grid_columnconfigure(1, weight=1)
         label_font = ctk.CTkFont(size=14, weight="bold")
 
@@ -58,6 +64,7 @@ class Main(ctk.CTk):
         self.status_label.grid(row=5, column=0, columnspan=3, padx=10, sticky="w")
 
     def start(self) -> None:
+        """Stop any running refresh and start a new one on a worker thread."""
         url = self.link_input.get().strip()
         delay = int(self.delay_input.get())
         refresh_count = int(self.view_count_input.get())
@@ -82,16 +89,19 @@ class Main(ctk.CTk):
             self.status_label.configure(text="Done.")
 
     def stop(self) -> None:
+        """Stop the running refresh."""
         if self.refresher is not None:
             self.refresher.stop()
         self.status_label.configure(text="Stopped.")
 
     def on_closing(self) -> None:
+        """Stop the running refresh, then close the window."""
         if self.refresher is not None:
             self.refresher.stop()
         self.destroy()
 
 
 def main() -> None:
+    """Open the Tkinter window."""
     app = Main()
     app.mainloop()
